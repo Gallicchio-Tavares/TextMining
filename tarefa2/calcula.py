@@ -1,20 +1,16 @@
 # função para calcular o TF (Term Frequency)
 
-def calculaTF(termo, doc):
+def calculaTF(freq, doc):
+    import math
     tf_mapa = {}
-    tamanho = len(doc) # qtd de palavras no documento
-    for t, c in termo.items(): # t corresponde ao termo em questão; c corresponde a qtd de vezes que esse termo ocorre
-        tf_mapa[t] = c / float(tamanho) # fórmla do tf
-        
-    print("Termo\tTF")
-    print("-"*30)
-    for termo, frequencia in tf_mapa.items():
-        if frequencia != 0:
-            print(f"{termo}\t{frequencia:.5f}")
+    tamanho = len(doc) # qtd de palavras no doc
+    for termo, c in freq.items(): #c corresponde a qtd de vezes que o termo ocorre
+        if c > 0:
+            tf_mapa[termo] = 1 + math.log10(freq[termo])
         else:
-            print(f"{termo}\t{int(frequencia)}")
-    print("\n")
-    return tf_mapa # retorno meu tf mapeado (termo -> frequencia do termo)
+            tf_mapa[termo] = 0
+
+    return tf_mapa # retorno meu tf mapeado (freq -> frequencia do freq)
 
 # função para calcular o DF (Document Frequency)
 
@@ -28,7 +24,7 @@ def calculaDF(docs):
                 
     return df_mapa
 
-#função para calcular o IDF (Inverse Document Frequency) de um conjunto de documentos
+#função para calcular o IDF (Inverse Document Frequency) de um conjunto de docs
 
 def calculaIDF(docs):
     import math
@@ -37,10 +33,41 @@ def calculaIDF(docs):
     idf_mapa = calculaDF(docs) 
     df = calculaDF(docs)
     
-    print("Termo\tDF\tIDF")
-    print("-"*30)
     for p, valor in idf_mapa.items():
         idf_mapa[p] = round(math.log(N / float(valor), 10), 6)
-        print(f"{p}\t{df[p]}\t{idf_mapa[p]}")      
+     
     return idf_mapa
 
+#função para calcular TF x IDF 
+def calculaTFxIDF(tf_mapa, idfs):
+    tfidf = {}
+    for p, valor in tf_mapa.items():
+        tfidf[p] = valor * idfs[p]
+    return tfidf 
+
+#função para calcular a similaridade por cosseno
+def similaridade(dados):
+    import math
+    similaridade = {}
+    for i in range(0, 12):
+        for j in range(i + 1, 12):
+            cos = 0
+            produto = 0
+            A = 0
+            B = 0
+
+            for k in range(len(dados)):
+                produto += (dados.iloc[k, i]) * (dados.iloc[k, j])
+                A += (dados.iloc[k, i] ** 2)
+                B += (dados.iloc[k, j] ** 2)
+
+            if A > 0 and B > 0:
+                cos = produto / (math.sqrt(A) * math.sqrt(B))
+
+            doc_i = i + 1
+            doc_j = j + 1
+            similaridade[f'{doc_i}.txt - {doc_j}.txt -'] = cos
+
+    print('Os docs mais similares são')
+    for i in sorted(similaridade, key=similaridade.get, reverse=True)[:4]:
+        print(i, round(similaridade[i], 5))
